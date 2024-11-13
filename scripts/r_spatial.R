@@ -20,6 +20,7 @@ library(tidyverse)   # ggplot, dplyr etc
 library(scales)      # for oob (out of bounds) scale
 library(ggnewscale) # for using multiple color fill scales in ggplot
 library(patchwork)  # for combining multiple ggplots in one panel plot
+library(raster)     # convert terra objects to raster data if terra does not work directly
 
 # explore color palettes
 # also see https://www.datanovia.com/en/blog/top-r-color-palettes-to-know-for-great-data-visualization/
@@ -55,8 +56,10 @@ sf::st_layers("./lakes/lakes.gpkg")
 lakes<-terra::vect("./lakes/lakes.gpkg",
                    layer="lakes")  
 sf::st_layers("./studyarea/studyarea.gpkg")
-studyarea<-terra::vect("./studyarea/studyarea.gpkg",
-                              layer="my_study_area")
+
+#change this to the right file
+studyarea<-terra::vect("./studyarea_reprojected.shp"
+                       )
 
 
 # load the raster data for the whole ecosystem
@@ -68,17 +71,96 @@ elevation<-terra::rast("./2023_elevation/elevation_90m.tif")
 # inspect the data 
 class(protected_areas)
 
+plot(protected_areas)
 
 # set the limits of the map to show (xmin, xmax, ymin, ymax in utm36 coordinates)
 xlimits<-c(550000,900000)
 ylimits<-c(9600000,9950000)
 
 # plot the woody biomass map that you want to predict
-plot(woodybiom, main = "Woody Vegetation Biomass", col = terrain.colors(100))
+plot(raster(woodybiom), 
+     main = "Woody Biomass", 
+     zlim = c(0,30), 
+     col = pal_zissou2) #conv to raster, terra does not work
+
+ggplot2::ggplot() +
+  tidyterra::geom_spatraster(data = woodybiom) +
+  ggplot2::scale_fill_gradientn(colours = rev(terrain.colors(6)),
+                                limits = c(0,8),
+                                oob = squish
+                                )+
+  tidyterra::geom_spatvector(data = protected_areas,
+                             fill = NA,
+                             color = "black",
+                             linewidth = 0.6)  +
+  tidyterra::geom_spatvector(data = studyarea,
+                             fill = NA,
+                             linewidth = 1, color = "red") +
+  tidyterra::geom_spatvector(data = lakes,
+                             fill = "lightblue",
+                             linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers,
+                             color = "blue",
+                             linewidth = 0.5) +
+  ggplot2::coord_sf(xlim = xlimits,
+                    ylim = ylimits) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(panel.border = ggplot2::element_rect(color = "black", fill = NA, linewidth = 1)
+  )
+  
 
 # plot the rainfall map
 
+ggplot2::ggplot() +
+  tidyterra::geom_spatraster(data = rainfall) +
+  ggplot2::scale_fill_gradientn(colours = pal_zissou1,
+                                oob = squish
+  )+
+  tidyterra::geom_spatvector(data = protected_areas,
+                             fill = NA,
+                             color = "black",
+                             linewidth = 0.6)  +
+  tidyterra::geom_spatvector(data = studyarea,
+                             fill = NA,
+                             linewidth = 1, color = "red") +
+  tidyterra::geom_spatvector(data = lakes,
+                             fill = "lightblue",
+                             linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers,
+                             color = "blue",
+                             linewidth = 0.5) +
+  ggplot2::coord_sf(xlim = xlimits,
+                    ylim = ylimits) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(panel.border = ggplot2::element_rect(color = "black", fill = NA, linewidth = 1)
+  )
+
 # plot the elevation map
+
+ggplot2::ggplot() +
+  tidyterra::geom_spatraster(data = woodybiom) +
+  ggplot2::scale_fill_gradientn(colours = rev(terrain.colors(6)),
+                                limits = c(0,8),
+                                oob = squish
+  )+
+  tidyterra::geom_spatvector(data = protected_areas,
+                             fill = NA,
+                             color = "black",
+                             linewidth = 0.6)  +
+  tidyterra::geom_spatvector(data = studyarea,
+                             fill = NA,
+                             linewidth = 1, color = "red") +
+  tidyterra::geom_spatvector(data = lakes,
+                             fill = "lightblue",
+                             linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers,
+                             color = "blue",
+                             linewidth = 0.5) +
+  ggplot2::coord_sf(xlim = xlimits,
+                    ylim = ylimits) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(panel.border = ggplot2::element_rect(color = "black", fill = NA, linewidth = 1)
+  )
 
 # combine the different maps  into one composite map using the patchwork library
 # and save it to a high resolution png
