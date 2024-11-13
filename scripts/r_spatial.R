@@ -3,7 +3,9 @@
 
 rm(list = ls())
 # set the working directory where your GIS data are located
-setwd("G:/Shared drives/_Org OlffLab/Teaching/APCE/APCE2024/APCE2024GIS")
+
+GISlocation <- "C:/Users/thijs/Desktop/APCE2024"
+setwd(GISlocation)
 
 # restore the libraries of the project 
 renv::restore()
@@ -22,6 +24,7 @@ library(patchwork)  # for combining multiple ggplots in one panel plot
 # explore color palettes
 # also see https://www.datanovia.com/en/blog/top-r-color-palettes-to-know-for-great-data-visualization/
 # Base R palettes
+
 barplot(rep(1,10), col = grey.colors(10))
 barplot(rep(1,10), col = rev(topo.colors(10))) # rev turns the scale arround
 barplot(rep(1,10), col = rev(terrain.colors(10)))
@@ -71,6 +74,7 @@ xlimits<-c(550000,900000)
 ylimits<-c(9600000,9950000)
 
 # plot the woody biomass map that you want to predict
+plot(woodybiom, main = "Woody Vegetation Biomass", col = terrain.colors(100))
 
 # plot the rainfall map
 
